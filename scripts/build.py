@@ -392,8 +392,14 @@ def build_plant(p, prev, nxt):
 </figure>'''
     # facts
     rows = []
-    if p['names']:
-        rows.append(('translate', 'Names in the book', rich(p['names'])))
+    # The book writes "(?)", "Not known." or "Doubtful." where it had no local name to give.
+    names = re.sub(r'^\(\?\)[.;]?\s*', '', p['names']).strip()
+    no_local = names != p['names'].strip() or plain(names).rstrip('.').lower() in ('', 'not known', 'unknown', 'doubtful')
+    if no_local:
+        named = '' if plain(names).rstrip('.').lower() in ('', 'not known', 'unknown', 'doubtful') else rich(names) + ' '
+        rows.append(('translate', 'Names in the book', named + 'The book records no Philippine name for this plant.'))
+    elif names:
+        rows.append(('translate', 'Names in the book', rich(names)))
     if p['swatches']:
         parts = ''.join(
             f'<span class="color-part"><span class="part">{esc(part)}</span>{"".join(swatch(c) for c in cols)}'
