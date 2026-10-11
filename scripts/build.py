@@ -83,6 +83,7 @@ def load():
     photos = enrich['_photos']
     context = json.loads((ROOT / 'data' / 'context.json').read_text(encoding='utf-8'))
     powo_text = json.loads((ROOT / 'data' / 'powo_descriptions.json').read_text(encoding='utf-8'))
+    other_names = json.loads((ROOT / 'data' / 'other_names.json').read_text(encoding='utf-8'))
     extra = json.loads((ROOT / 'data' / 'extra_photos.json').read_text(encoding='utf-8'))
     cur = {}
     for line in (ROOT / 'data' / 'curation.tsv').read_text(encoding='utf-8').splitlines():
@@ -139,6 +140,7 @@ def load():
         ctx = context.get(f"{c['accepted']}|{c['wiki'] or c['accepted']}", {}) if c['accepted'] else {}
         p['about_en'], p['about_tl'], p['ph'] = ctx.get('en'), ctx.get('tl'), ctx.get('ph')
         p['about_powo'] = powo_text.get(c['accepted']) if not p['about_en'] else None
+        p['other_names'] = other_names.get(c['accepted']) if c['accepted'] else None
         p['swatches'], p['color_source'] = parse_colors(c['colors'], e)
         groups = [COLORS[col][1] for part, cols in p['swatches'] if part == 'flower' for col in cols]
         if not groups:
@@ -398,6 +400,17 @@ def build_plant(p, prev, nxt):
     if no_local:
         named = '' if plain(names).rstrip('.').lower() in ('', 'not known', 'unknown', 'doubtful') else rich(names) + ' '
         rows.append(('translate', 'Names in the book', named + 'The book records no Philippine name for this plant.'))
+        other = p['other_names'] or {}
+
+        def cite(pairs):
+            return ' and '.join(f'<a href="{esc(u)}" target="_blank" rel="noopener">{esc(label)}</a>' for label, u in pairs)
+        if other.get('names'):
+            gloss = f' {esc(other["gloss"])}' if other.get('gloss') else ''
+            rows.append(('translate', 'Names from other sources',
+                         f'{other["names"]}.{gloss}<span class="fine"> Listed by {cite(other["sources"])}.</span>'))
+        elif other.get('checked'):
+            rows.append(('translate', 'Names from other sources',
+                         f'None found. {cite(other["checked"])} gives names from neighbouring countries but none from the Philippines.'))
     elif names:
         rows.append(('translate', 'Names in the book', rich(names)))
     if p['swatches']:
@@ -549,6 +562,10 @@ def build_about(plants):
     <p>Pardo de Tavera used his own orthography for Philippine languages. His <i>g̃</i> is the sound now written <i>ng</i>, so <i>Malug̃ay</i> is malunggay and <i>Bawag̃</i> is bawang. He writes <i>k</i> and <i>w</i> where Spanish spelling of the time used <i>c</i>, <i>qu</i> and <i>u</i>.</p>
     <dl class="langs">{langs}</dl>
     <p>Sizes in the botanical descriptions use the marks ° and ′, which read as feet and inches. The book does not explain them.</p>
+  </section>
+  <section>
+    <h2>Plants the book could not name</h2>
+    <p>For ten plants Pardo de Tavera wrote a question mark or "not known" where the Philippine name should be. Those pages add names from two later references: <a href="https://stuartxchange.com/" target="_blank" rel="noopener">StuartXchange</a>, Dr. Godofredo Stuart's compilation of Philippine medicinal plants, and <a href="https://plantuse.plantnet.org/en/Category:PROSEA" target="_blank" rel="noopener">PROSEA</a>, the Plant Resources of South-East Asia handbooks. Five of the ten have names there. For the other five, PROSEA lists names from neighbouring countries but none from the Philippines.</p>
   </section>
   <section>
     <h2>A caution</h2>
