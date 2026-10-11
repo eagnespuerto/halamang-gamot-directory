@@ -18,7 +18,7 @@ Each plant has its own page with:
 - a modern description from Wikipedia in English and, where one exists, in Tagalog
 - the Philippine provinces with records of the plant on GBIF
 - the 1901 book's own text on uses, dose and botany
-- a summary of the 1985 book's remedies by ailment, with page numbers
+- a summary of the 1985 book's remedies by ailment, with its amounts and doses reworded and page numbers
 - the most cited recent papers on the plant, from Europe PMC
 
 The remedies and doses are a historical record. Several of the plants are poisonous. Nothing here is medical advice.
@@ -36,7 +36,7 @@ python scripts/build.py             # data -> docs/
 
 `data/curation.tsv` holds what was compiled by hand for each entry: accepted name, English and Filipino names, colours, native range and naming notes. Edit that file and rerun `build.py` to correct an entry.
 
-`data/ladion.tsv` holds the 1985 book in the same pipe-separated form: the names as printed, the accepted name, and each remedy as `ailment=part and form@page`. A plant whose accepted name matches a row in `curation.tsv` joins that entry. The rest get pages of their own.
+`data/ladion.tsv` holds the 1985 book in the same pipe-separated form: the names as printed, the accepted name, and each remedy as `ailment=part and form {amounts and dose}@page`. A plant whose accepted name matches a row in `curation.tsv` joins that entry. The rest get pages of their own.
 
 The ailment filter uses the `AILMENTS` table in `build.py`. The 1985 book's chapters map straight onto its groups. For the 1901 book the build searches each plant's "Uses" text for period terms such as febrifuge or anthelmintic, so those tags are keyword matches, not a reading of the text.
 
@@ -47,7 +47,7 @@ GitHub Pages serves the `docs/` folder from `main`.
 ## Sources and licences
 
 - Book text: [Project Gutenberg ebook 26393](https://www.gutenberg.org/ebooks/26393), public domain. Scan at the [Internet Archive](https://archive.org/details/cu31924050881592).
-- *Healing Wonders of Herbs* is in copyright. The site carries a summary of its remedies and the names it prints. Its text, doses and photographs are not reproduced, and the scan is not in this repository.
+- *Healing Wonders of Herbs* is in copyright. The site carries a reworded summary of its remedies and doses and the names it prints. Its text and photographs are not reproduced, and the scan is not in this repository.
 - Photos: Wikimedia Commons, loaded from Wikimedia's servers. Each keeps its own licence, shown under the photo.
 - Photos for species with nothing on Commons: [iNaturalist](https://www.inaturalist.org/) (CC0 or CC BY), and failing that herbarium specimens from [Plants of the World Online](https://powo.science.kew.org/), digital images © Board of Trustees, RBG Kew, CC BY 3.0. Listed by hand in `data/extra_photos.json`.
 - Modern descriptions: excerpts from [English](https://en.wikipedia.org/) and [Tagalog](https://tl.wikipedia.org/) Wikipedia, CC BY-SA 4.0, each linked to its article. Eight species with no English article use the summary line from Plants of the World Online (CC BY 3.0), listed in `data/powo_descriptions.json`.

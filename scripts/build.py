@@ -99,7 +99,7 @@ def tag_ailments(p):
     """Ailment groups for one plant: keyword matches in the 1901 text, chapter titles from the 1985 book."""
     text = plain(' '.join(p['uses'])).lower()
     keys = {k for k, _, pattern, _ in AILMENTS if text and re.search(pattern, text)}
-    for ailment, how, _ in (p['ladion'] or {}).get('uses', []):
+    for ailment, how, _, _ in (p['ladion'] or {}).get('uses', []):
         keys.add('fever' if how.endswith('for the fever') else CHAPTER_GROUP[ailment])
     return [k for k, _, _, _ in AILMENTS if k in keys]
 
@@ -115,8 +115,9 @@ def load_ladion():
             n=int(n), page=int(pg), title=title, printed=printed, accepted=acc, english=en, filipino=fil, colors=colors,
             native=native, wiki=wiki, note=note,
             names=[tuple(x.strip() for x in chunk.split(':', 1)) for chunk in names.split(';') if chunk.strip()],
-            uses=[(a.strip(), how.strip(), int(pg2)) for a, how, pg2 in
-                  (re.match(r'(.*?)=(.*)@(\d+)$', chunk.strip()).groups() for chunk in uses.split(';') if chunk.strip())]))
+            uses=[(a.strip(), how.strip(), dose or '', int(pg2)) for a, how, dose, pg2 in
+                  (re.match(r'(.*?)=(.*?)(?:\s*\{(.*)\})?@(\d+)$', chunk.strip()).groups()
+                   for chunk in uses.split(';') if chunk.strip())]))
     return rows
 
 
@@ -408,7 +409,7 @@ def build_index(plants):
       <div><dt>{icon('flask')} Research</dt><dd>The most cited recent papers with the plant in the title, linked to the publisher.</dd></div>
     </dl>
   </div>
-  <p class="caution">{icon('warning')}<span>The remedies are a historical record from 1901 and 1985. Several of these plants are poisonous. Do not treat this site as medical advice.</span></p>
+  <p class="caution">{icon('warning')}<span>The remedies and doses are a historical record from 1901 and 1985. Several of these plants are poisonous. Do not treat this site as medical advice.</span></p>
 </section>
 <script src="assets/site.js" defer></script>'''
     desc = (f"A browsable directory of {len(plants)} medicinal plants from Pardo de Tavera's The Medicinal Plants of the Philippines (1901) "
@@ -586,15 +587,16 @@ def build_plant(p, prev, nxt):
 </section>''' if p['tavera'] else ''
     if lad:
         remedies = ''.join(
-            f'<li><b>{esc(a[0].upper() + a[1:])}</b><span>{esc(how[0].upper() + how[1:])}. <span class="fine">Page {pg}</span></span></li>'
-            for a, how, pg in lad['uses'])
+            f'<li><b>{esc(a[0].upper() + a[1:])}</b><span>{esc(how[0].upper() + how[1:])}.</span>'
+            f'{f"<span class=dose>{esc(dose)}.</span>" if dose else ""}<span class="fine">Page {pg}</span></li>'
+            for a, how, dose, pg in lad['uses'])
         lad_note = f'<p class="note">{icon("leaf")}<span>{esc(lad["note"])}</span></p>' if lad['note'] else ''
         text += f'''<section class="book-text" aria-labelledby="lw-h">
   <h2 id="lw-h">{icon('book')} What the 1985 book uses it for</h2>
-  <p class="caution">{icon('warning')}<span>A record of home remedies from 1985, not medical advice. Amounts and doses are left out.</span></p>
+  <p class="caution">{icon('warning')}<span>A record of home remedies from 1985, with the book's amounts and doses reworded. It is not medical advice.</span></p>
   <ul class="remedies">{remedies}</ul>
   {lad_note}
-  <p class="fine">Summarised from Herminia de Guzman-Ladion, <i>{LADION}</i> (Manila: Philippine Publishing House, 1985), where this plant is shown as “{esc(lad['title'])}” on page {lad['page']}. The book is in copyright, so its wording and photographs are not reproduced.</p>
+  <p class="fine">Summarised from Herminia de Guzman-Ladion, <i>{LADION}</i> (Manila: Philippine Publishing House, 1985), where this plant is shown as “{esc(lad['title'])}” on page {lad['page']}. The book is in copyright, so its wording and photographs are not reproduced. Amounts are the book's, restated.</p>
 </section>'''
     # research
     pa = p['papers']
@@ -692,7 +694,7 @@ def build_about(plants):
     <h2>The second book: <i>{LADION}</i></h2>
     <p>Herminia de Guzman-Ladion, a nurse and physical therapist, wrote <i>{LADION}: Guide to the Effective Use of Medicinal Plants</i> for households. Philippine Publishing House in Manila printed it in 1985. It pairs water treatments with plant remedies for some forty everyday complaints, from abscesses to worms, then shows {n_ladion} plants one to a page with a photograph, the scientific name and the names used in Tagalog, Ilocano, Visayan, Bicol and Pampango.</p>
     <p>{n_both} of those plants are also in the 1901 book, and their pages here carry both accounts. The other {n_ladion - n_both} have pages of their own. Three plants the remedies call for, tagulinaw, malabulak and lumbang bato, have no plant page in the book and are left out.</p>
-    <p>The book is still in copyright. Its entries here are a summary written for this site: which ailment each plant is used for, which part, and in what form, with the page number. The book's wording, its measured amounts and doses, and its photographs are not reproduced. Names are given as printed, misprints included, beside the accepted name.</p>
+    <p>The book is still in copyright. Its entries here are a summary written for this site: which ailment each plant is used for, which part, in what form, and the amounts and doses the book gives, with the page number. All of it is reworded. The book's own text and its photographs are not reproduced. Where the scan is too faint to read an amount, the entry says less instead of guessing. Names are given as printed, misprints included, beside the accepted name.</p>
   </section>
   <section>
     <h2>Filtering by ailment</h2>
