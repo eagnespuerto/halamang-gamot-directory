@@ -81,6 +81,7 @@ def load():
     book = json.loads((ROOT / 'data' / 'book.json').read_text(encoding='utf-8'))
     enrich = json.loads((ROOT / 'data' / 'enrichment.json').read_text(encoding='utf-8'))
     photos = enrich['_photos']
+    powo = json.loads((ROOT / 'data' / 'powo_photos.json').read_text(encoding='utf-8'))
     cur = {}
     for line in (ROOT / 'data' / 'curation.tsv').read_text(encoding='utf-8').splitlines():
         if not line.strip() or line.startswith('#'):
@@ -107,7 +108,7 @@ def load():
         p['printed'] = name
         p['printed_rest'] = printed_rest
         p['sci'] = c['accepted'] or name
-        p['title'] = c['filipino'] or c['english'] or name
+        p['title'] = c['filipino'] or c['english'] or p['sci']
         p['subtitle'] = c['english'] if c['filipino'] and fold(c['english']) != fold(c['filipino']) else ''
         base = slugify(p['sci'])
         if base in seen:
@@ -123,6 +124,13 @@ def load():
         if p['photo']:
             for k in ('thumb', 'small'):
                 p['photo'][k] = (p['photo'].get(k) or '').split('?')[0]
+        elif c['accepted'] in powo:
+            # Kew herbarium sheet, for species with nothing on Wikimedia Commons
+            k = powo[c['accepted']]
+            p['photo'] = {'thumb': k['thumb'], 'small': k['small'], 'w': None, 'h': None, 'specimen': True,
+                          'page': 'https://powo.science.kew.org/taxon/' + k['taxon'],
+                          'artist': 'Board of Trustees, RBG Kew', 'license': 'CC BY 3.0',
+                          'license_url': 'https://creativecommons.org/licenses/by/3.0/'}
         p['swatches'], p['color_source'] = parse_colors(c['colors'], e)
         groups = [COLORS[col][1] for part, cols in p['swatches'] if part == 'flower' for col in cols]
         if not groups:
@@ -204,8 +212,9 @@ def swatch(col):
 
 def card(p, up=''):
     if p['photo']:
-        img = (f'<img src="{esc(p["photo"]["small"])}" alt="" loading="lazy" decoding="async" '
-               f'width="330" height="{round(330 * (p["photo"]["h"] or 248) / (p["photo"]["w"] or 330))}">')
+        ph = p['photo']
+        size = f' width="330" height="{round(330 * ph["h"] / ph["w"])}"' if ph['w'] else ''
+        img = f'<img src="{esc(ph["small"])}" alt="" loading="lazy" decoding="async"{size}>'
     else:
         img = f'<span class="no-photo">{icon("plant")}</span>'
     dots = ''.join(swatch(c) for part, cols in p['swatches'][:1] for c in cols)
@@ -232,7 +241,8 @@ def build_index(plants):
         f'<button type="button" class="chip" data-color="{g}" aria-pressed="false">'
         f'<span class="swatch" style="--c:{GROUP_HEX[g]}"></span>{GROUP_LABEL.get(g, g)}</button>' for g in COLOR_GROUPS)
     cards = ''.join(card(p) for p in plants)
-    with_photo = sum(1 for p in plants if p['photo'])
+    specimens = sum(1 for p in plants if p['photo'] and p['photo'].get('specimen'))
+    with_photo = sum(1 for p in plants if p['photo']) - specimens
     with_papers = sum(1 for p in plants if p['papers']['items'])
     body = f'''<section class="hero">
   <div class="wrap hero-grid">
@@ -269,7 +279,7 @@ def build_index(plants):
 <section class="wrap coverage">
   <h2>What each entry holds</h2>
   <div class="coverage-grid">
-    <p class="coverage-lead">The book's own words on uses, dose, botany and habitat sit beside facts gathered in {FETCHED}. {with_photo} of {len(plants)} entries have a photo from Wikimedia Commons and {with_papers} list papers from Europe PMC.</p>
+    <p class="coverage-lead">The book's own words on uses, dose, botany and habitat sit beside facts gathered in {FETCHED}. {with_photo} of {len(plants)} entries have a photo from Wikimedia Commons, {specimens} show a herbarium sheet from Kew, and {with_papers} list papers from Europe PMC.</p>
     <dl class="coverage-list">
       <div><dt>{icon('translate')} Names</dt><dd>The Tagalog, Visayan, Ilocano, Spanish and English names Pardo de Tavera recorded, plus the name in use today.</dd></div>
       <div><dt>{icon('pin')} Location</dt><dd>Where the plant is native and where the book says it grew in the Philippines.</dd></div>
@@ -312,7 +322,13 @@ def build_plant(p, prev, nxt):
         ph = p['photo']
         lic = (f'<a href="{esc(ph["license_url"])}" target="_blank" rel="noopener">{esc(ph["license"])}</a>'
                if ph.get('license_url') else esc(ph.get('license') or 'see file page'))
-        figure = f'''<figure class="plant-photo">
+        if ph.get('specimen'):
+            figure = f'''<figure class="plant-photo plant-photo-specimen">
+  <img src="{esc(ph['thumb'])}" alt="Pressed herbarium specimen of {esc(p['sci'])}" fetchpriority="high">
+  <figcaption>{icon('camera')}<span>Herbarium specimen at Kew. Digital image © {esc(ph['artist'])}, {lic}, via <a href="{esc(ph['page'])}" target="_blank" rel="noopener">Plants of the World Online</a></span></figcaption>
+</figure>'''
+        else:
+            figure = f'''<figure class="plant-photo">
   <img src="{esc(ph['thumb'])}" alt="{esc(p['title'])}, {esc(p['sci'])}" width="{ph['w']}" height="{ph['h']}" fetchpriority="high">
   <figcaption>{icon('camera')}<span>Photo: {esc(ph.get('artist') or 'see file page')}, {lic}, via <a href="{esc(ph['page'])}" target="_blank" rel="noopener">Wikimedia Commons</a></span></figcaption>
 </figure>'''
@@ -439,7 +455,7 @@ def build_families(plants):
 
 def build_about(plants):
     langs = ''.join(f'<div><dt>{a}</dt><dd>{b}</dd></div>' for a, b in LANGS)
-    no_photo = [p for p in plants if not p['photo']]
+    specimens = sum(1 for p in plants if p['photo'] and p['photo'].get('specimen'))
     renamed = sum(1 for p in plants if p['accepted'] and fold(p['printed']) != fold(p['sci']))
     body = f'''<header class="page-head wrap">
   <h1>About the book</h1>
@@ -455,7 +471,7 @@ def build_about(plants):
     <h2>How this directory was put together</h2>
     <p>The book's text comes from the Project Gutenberg transcription, split into one entry per plant by a script. Nothing in the quoted passages has been reworded. Where the book describes two or three species in a single account, each of their pages carries that account.</p>
     <p>Botanical names have moved a long way since 1901. {renamed} of the {len(plants)} entries carry a different accepted name today, and each page shows both the name as printed and the modern one. Some of the book's identifications were wrong for the Philippine plant, usually because a name from Indian botany was applied to a local species. Those pages carry a note.</p>
-    <p>Modern names, colours and native ranges were compiled by hand and checked against the GBIF backbone taxonomy. Photos are the lead image of each species' English Wikipedia article, or the image on its Wikidata record, with the photographer and licence read from Wikimedia Commons. {len(no_photo)} entries have no photo because no freely licensed one turned up.</p>
+    <p>Modern names, colours and native ranges were compiled by hand and checked against the GBIF backbone taxonomy. Photos are the lead image of each species' English Wikipedia article, or the image on its Wikidata record, with the photographer and licence read from Wikimedia Commons. {specimens} species have no photo there, so their pages show a pressed specimen from the herbarium at the Royal Botanic Gardens, Kew, taken from <a href="https://powo.science.kew.org/" target="_blank" rel="noopener">Plants of the World Online</a>.</p>
     <p>Research links come from Europe PMC, fetched in {FETCHED}. For each plant the script asks for papers since 2022 with the species name in the title, pooling older synonyms still used in journals, and keeps the three with the most citations. If none exist it widens the search to 2018, then to abstracts. The list shows what researchers are studying. It does not vouch for any result.</p>
   </section>
   <section>

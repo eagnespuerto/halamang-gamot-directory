@@ -13206,6 +13206,30 @@
     "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Indian_jujube_%28fruit%29.jpg/960px-Indian_jujube_%28fruit%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
     "small": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Indian_jujube_%28fruit%29.jpg/330px-Indian_jujube_%28fruit%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
    }
+  },
+  "Calophyllum pentapetalum": {
+   "title": "Calophyllum pentapetalum",
+   "url": "https://en.wikipedia.org/wiki/Calophyllum_pentapetalum",
+   "file": null,
+   "qid": "Q15387347",
+   "image": null
+  }
+ },
+ "Calophyllum pentapetalum": {
+  "gbif": {
+   "usageKey": 7507880,
+   "scientificName": "Calophyllum pentapetalum (Blanco) Merr.",
+   "status": "ACCEPTED",
+   "matchType": "EXACT",
+   "family": "Calophyllaceae",
+   "species": "Calophyllum pentapetalum"
+  },
+  "papers": {
+   "total": 0,
+   "since": 2018,
+   "scope": "none",
+   "query": "",
+   "items": []
   }
  }
 }
