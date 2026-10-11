@@ -1,0 +1,31 @@
+{
+ "_about": "Philippine names from sources other than the book, for the entries where the book records none. Looked up by hand in October 2026. 'checked' lists sources that were searched and give no Philippine name.",
+ "Alangium salviifolium": {
+  "names": "<i>Guntapay</i>, Tagalog",
+  "sources": [["StuartXchange", "https://stuartxchange.com/Guntapay"], ["PROSEA", "https://plantuse.plantnet.org/en/Alangium_salviifolium_(PROSEA)"]]
+ },
+ "Oldenlandia corymbosa": {
+  "names": "<i>Malaulasiman</i>, <i>Ulasiman-aso</i>, Tagalog",
+  "gloss": "Malaulasiman means \"like ulasiman\", the Tagalog name for purslane. Ulasiman-aso is also used for water hyssop.",
+  "sources": [["StuartXchange", "https://stuartxchange.com/MalaUlasimanAso"], ["PROSEA", "https://plantuse.plantnet.org/en/Oldenlandia_corymbosa_(PROSEA)"]]
+ },
+ "Allamanda cathartica": {
+  "names": "<i>Kampanilya</i>, <i>Kampanero</i>, Tagalog; <i>Campanilla</i>, Spanish and Tagalog",
+  "gloss": "Campanilla is Spanish for \"little bell\". The same name is used for yellow oleander.",
+  "sources": [["StuartXchange", "https://stuartxchange.com/Kampanilya.html"], ["PROSEA", "https://plantuse.plantnet.org/en/Allamanda_cathartica_(PROSEA)"]]
+ },
+ "Chloranthus elatior": {
+  "names": "<i>Barau-barau</i>, Luzon; <i>Lagrimas</i>, Tagalog and Bikol; <i>Tul-an hinbad</i>, Samar; <i>Tunggao</i>, Tagbanua",
+  "gloss": "Lagrimas is Spanish for \"tears\".",
+  "sources": [["StuartXchange", "https://stuartxchange.com/Barau-barau"], ["PROSEA", "https://plantuse.plantnet.org/en/Chloranthus_erectus_(PROSEA)"]]
+ },
+ "Acalypha indica": {
+  "names": "<i>Bugos</i>, Tagalog; <i>Maraotong</i>, <i>Taptapingar</i>, Ilocano",
+  "sources": [["StuartXchange", "https://stuartxchange.com/Maraotong"], ["PROSEA", "https://plantuse.plantnet.org/en/Acalypha_indica_(PROSEA)"]]
+ },
+ "Murraya koenigii": {"checked": [["PROSEA", "https://plantuse.plantnet.org/en/Murraya_koenigii_(PROSEA)"]]},
+ "Justicia adhatoda": {"checked": [["PROSEA", "https://plantuse.plantnet.org/en/Justicia_adhatoda_(PROSEA)"]]},
+ "Helicteres isora": {"checked": [["PROSEA", "https://plantuse.plantnet.org/en/Helicteres_isora_(PROSEA)"]]},
+ "Vincetoxicum indicum": {"checked": [["PROSEA", "https://plantuse.plantnet.org/en/Tylophora_indica_(PROSEA)"]]},
+ "Trichosanthes tricuspidata": {"checked": [["PROSEA", "https://plantuse.plantnet.org/en/Trichosanthes_tricuspidata_(PROSEA)"]]}
+}

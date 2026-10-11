@@ -43,6 +43,7 @@ GitHub Pages serves the `docs/` folder from `main`.
 - Modern descriptions: excerpts from [English](https://en.wikipedia.org/) and [Tagalog](https://tl.wikipedia.org/) Wikipedia, CC BY-SA 4.0, each linked to its article. Eight species with no English article use the summary line from Plants of the World Online (CC BY 3.0), listed in `data/powo_descriptions.json`.
 - Philippine records by province and name check: [GBIF](https://www.gbif.org/) occurrence data and backbone taxonomy.
 - Papers: [Europe PMC](https://europepmc.org/).
+- Philippine names for plants the book leaves unnamed: [StuartXchange](https://stuartxchange.com/) and [PROSEA](https://plantuse.plantnet.org/en/Category:PROSEA), listed by hand in `data/other_names.json`.
 - Icons: [Phosphor Icons](https://phosphoricons.com), MIT.
 - Fonts: Newsreader and Hanken Grotesk, SIL Open Font License.
 - Site code: MIT.
