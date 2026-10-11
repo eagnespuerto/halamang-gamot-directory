@@ -6,6 +6,7 @@
 <title>Siempreviva · Halamang Gamot Directory</title>
 <meta name="description" content="Siempreviva (Kalanchoe laciniata) in The Medicinal Plants of the Philippines, 1901: names, colours, native range, photo, the book&#x27;s text and recent research.">
 <meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="preload" href="../assets/fonts/hanken-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/newsreader-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/site.css">
@@ -58,11 +59,18 @@
 </nav>
 </main>
 <footer class="site-footer">
-  <div class="wrap">
+  <div class="wrap footer-row">
+    <div class="footer-text">
     <p>Halamang Gamot Directory is an open, static guide to a public-domain book. Every entry links to its sources; if you spot an error, <a href="https://github.com/eagnespuerto/halamang-gamot-directory/issues" target="_blank" rel="noopener">open an issue on GitHub</a>.</p>
     <p>Icons by <a href="https://phosphoricons.com" target="_blank" rel="noopener">Phosphor Icons</a> (MIT). Book text is in the public domain. Modern descriptions are excerpts from Wikipedia under CC BY-SA 4.0. Photos keep their own licences, credited on each entry. Site code MIT licensed.</p>
     <p>Built by Ella Puerto with the help of Claude Code. <a href="https://ko-fi.com/eagnespuerto" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path fill="currentColor" d="M80 56V24a8 8 0 0 1 16 0v32a8 8 0 0 1-16 0m40 8a8 8 0 0 0 8-8V24a8 8 0 0 0-16 0v32a8 8 0 0 0 8 8m32 0a8 8 0 0 0 8-8V24a8 8 0 0 0-16 0v32a8 8 0 0 0 8 8m96 56v8a40 40 0 0 1-37.51 39.91a96.6 96.6 0 0 1-27 40.09H208a8 8 0 0 1 0 16H32a8 8 0 0 1 0-16h24.54A96.3 96.3 0 0 1 24 136V88a8 8 0 0 1 8-8h176a40 40 0 0 1 40 40m-48-24H40v40a80.27 80.27 0 0 0 45.12 72h69.76A80.27 80.27 0 0 0 200 136Zm32 24a24 24 0 0 0-16-22.62V136a96 96 0 0 1-1.2 15a24 24 0 0 0 17.2-23Z"/></svg> Support on Ko-fi</a></p>
+    </div>
+    <button type="button" class="theme-toggle" id="theme-toggle" hidden>
+      <span class="when-light"><svg class="icon" viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path fill="currentColor" d="M233.54 142.23a8 8 0 0 0-8-2a88.08 88.08 0 0 1-109.8-109.8a8 8 0 0 0-10-10a104.84 104.84 0 0 0-52.91 37A104 104 0 0 0 136 224a103.1 103.1 0 0 0 62.52-20.88a104.84 104.84 0 0 0 37-52.91a8 8 0 0 0-1.98-7.98m-44.64 48.11A88 88 0 0 1 65.66 67.11a89 89 0 0 1 31.4-26A106 106 0 0 0 96 56a104.11 104.11 0 0 0 104 104a106 106 0 0 0 14.92-1.06a89 89 0 0 1-26.02 31.4"/></svg> Dark mode</span>
+      <span class="when-dark"><svg class="icon" viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path fill="currentColor" d="M120 40V16a8 8 0 0 1 16 0v24a8 8 0 0 1-16 0m72 88a64 64 0 1 1-64-64a64.07 64.07 0 0 1 64 64m-16 0a48 48 0 1 0-48 48a48.05 48.05 0 0 0 48-48M58.34 69.66a8 8 0 0 0 11.32-11.32l-16-16a8 8 0 0 0-11.32 11.32Zm0 116.68l-16 16a8 8 0 0 0 11.32 11.32l16-16a8 8 0 0 0-11.32-11.32M192 72a8 8 0 0 0 5.66-2.34l16-16a8 8 0 0 0-11.32-11.32l-16 16A8 8 0 0 0 192 72m5.66 114.34a8 8 0 0 0-11.32 11.32l16 16a8 8 0 0 0 11.32-11.32ZM48 128a8 8 0 0 0-8-8H16a8 8 0 0 0 0 16h24a8 8 0 0 0 8-8m80 80a8 8 0 0 0-8 8v24a8 8 0 0 0 16 0v-24a8 8 0 0 0-8-8m112-88h-24a8 8 0 0 0 0 16h24a8 8 0 0 0 0-16"/></svg> Light mode</span>
+    </button>
   </div>
 </footer>
+<script src="../assets/theme.js" defer></script>
 </body>
 </html>
