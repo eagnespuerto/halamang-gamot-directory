@@ -13231,5 +13231,33 @@
    "query": "",
    "items": []
   }
+ },
+ "Samadera indica": {
+  "gbif": {
+   "usageKey": 3190660,
+   "scientificName": "Samadera indica Gaertn.",
+   "status": "ACCEPTED",
+   "matchType": "EXACT",
+   "family": "Simaroubaceae",
+   "species": "Samadera indica"
+  },
+  "papers": {
+   "total": 1,
+   "since": 2022,
+   "scope": "title",
+   "query": "(TITLE:\"Samadera indica\" OR TITLE:\"Quassia indica\") AND PUB_YEAR:[2022 TO 2026] AND SRC:MED",
+   "items": [
+    {
+     "title": "Unveiling the Quassia indica derived synthesis of Co<sub>3</sub>O<sub>4</sub>/ZnO nanohybrids for efficient dye degradation and cytotoxicity assessment",
+     "authors": "Scaria SS, Joseph KS",
+     "journal": "Environ Sci Pollut Res Int",
+     "year": "2025",
+     "doi": "10.1007/s11356-025-36502-4",
+     "pmid": "40381078",
+     "cited": 0,
+     "review": false
+    }
+   ]
+  }
  }
 }

@@ -1,0 +1,35 @@
+{
+ "_about": "Summary lines from Plants of the World Online (Royal Botanic Gardens, Kew, CC BY 3.0) for species with no English Wikipedia article. POWO blocks scripted requests, so these were read in a browser in October 2026.",
+ "Tetracera scandens": {
+  "taxon": "urn:lsid:ipni.org:names:317488-1",
+  "text": "The native range of this species is China (Yunnan) to W. & Central Malesia. It is a climber and grows primarily in the wet tropical biome."
+ },
+ "Tinospora crispa": {
+  "taxon": "urn:lsid:ipni.org:names:581600-1",
+  "text": "The native range of this species is Central Nepal to China (S. Yunnan) and W. & Central Malesia. It is a liana and grows primarily in the wet tropical biome."
+ },
+ "Garcinia venulosa": {
+  "taxon": "urn:lsid:ipni.org:names:428297-1",
+  "text": "The native range of this species is Philippines (Luzon). It is a tree and grows primarily in the wet tropical biome."
+ },
+ "Samadera indica": {
+  "taxon": "urn:lsid:ipni.org:names:814069-1",
+  "text": "The native range of this species is Tanzania (Pemba), Comoros, Madagascar, Tropical Asia to Caroline Islands (Palau). It is a tree and grows primarily in the wet tropical biome."
+ },
+ "Rhamnus wightii": {
+  "taxon": "urn:lsid:ipni.org:names:718746-1",
+  "text": "The native range of this species is Indian Subcontinent. It is a shrub or tree and grows primarily in the subtropical biome."
+ },
+ "Vincetoxicum indicum": {
+  "taxon": "urn:lsid:ipni.org:names:77164260-1",
+  "text": "The native range of this species is Indian Subcontinent to W. Malesia. It is a climbing subshrub or climbing shrub and grows primarily in the seasonally dry tropical biome."
+ },
+ "Limnophila rugosa": {
+  "taxon": "urn:lsid:ipni.org:names:804357-1",
+  "text": "The native range of this species is Tropical & Subtropical Asia to SW. Pacific. It is an annual or subshrub and grows primarily in the wet tropical biome."
+ },
+ "Cinnamomum pauciflorum": {
+  "taxon": "urn:lsid:ipni.org:names:463606-1",
+  "text": "The native range of this species is Nepal to S. China. It is a tree and grows primarily in the subtropical biome."
+ }
+}

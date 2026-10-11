@@ -81,6 +81,8 @@ def load():
     book = json.loads((ROOT / 'data' / 'book.json').read_text(encoding='utf-8'))
     enrich = json.loads((ROOT / 'data' / 'enrichment.json').read_text(encoding='utf-8'))
     photos = enrich['_photos']
+    context = json.loads((ROOT / 'data' / 'context.json').read_text(encoding='utf-8'))
+    powo_text = json.loads((ROOT / 'data' / 'powo_descriptions.json').read_text(encoding='utf-8'))
     extra = json.loads((ROOT / 'data' / 'extra_photos.json').read_text(encoding='utf-8'))
     cur = {}
     for line in (ROOT / 'data' / 'curation.tsv').read_text(encoding='utf-8').splitlines():
@@ -134,6 +136,9 @@ def load():
                               'license_url': 'https://creativecommons.org/licenses/by/3.0/'}
             else:
                 p['photo'] = dict(k, w=None, h=None, via='iNaturalist')
+        ctx = context.get(f"{c['accepted']}|{c['wiki'] or c['accepted']}", {}) if c['accepted'] else {}
+        p['about_en'], p['about_tl'], p['ph'] = ctx.get('en'), ctx.get('tl'), ctx.get('ph')
+        p['about_powo'] = powo_text.get(c['accepted']) if not p['about_en'] else None
         p['swatches'], p['color_source'] = parse_colors(c['colors'], e)
         groups = [COLORS[col][1] for part, cols in p['swatches'] if part == 'flower' for col in cols]
         if not groups:
@@ -200,7 +205,7 @@ def page(title, desc, body, depth=0, active='', extra_head=''):
 <footer class="site-footer">
   <div class="wrap">
     <p>Halamang Gamot Directory is an open, static guide to a public-domain book. Every entry links to its sources; if you spot an error, <a href="{REPO}/issues" target="_blank" rel="noopener">open an issue on GitHub</a>.</p>
-    <p>Icons by <a href="https://phosphoricons.com" target="_blank" rel="noopener">Phosphor Icons</a> (MIT). Book text is in the public domain. Photos keep their own licences, credited on each entry. Site code MIT licensed.</p>
+    <p>Icons by <a href="https://phosphoricons.com" target="_blank" rel="noopener">Phosphor Icons</a> (MIT). Book text is in the public domain. Modern descriptions are excerpts from Wikipedia under CC BY-SA 4.0. Photos keep their own licences, credited on each entry. Site code MIT licensed.</p>
     <p>Built by Ella Puerto with the help of Claude Code. <a href="https://ko-fi.com/eagnespuerto" target="_blank" rel="noopener">{icon('coffee')} Support on Ko-fi</a></p>
   </div>
 </footer>
@@ -286,7 +291,8 @@ def build_index(plants):
     <p class="coverage-lead">The book's own words on uses, dose, botany and habitat sit beside facts gathered in {FETCHED}. {with_photo} of {len(plants)} entries have a photo from Wikimedia Commons, {inat} from iNaturalist, {specimens} show a herbarium sheet from Kew, and {with_papers} list papers from Europe PMC.</p>
     <dl class="coverage-list">
       <div><dt>{icon('translate')} Names</dt><dd>The Tagalog, Visayan, Ilocano, Spanish and English names Pardo de Tavera recorded, plus the name in use today.</dd></div>
-      <div><dt>{icon('pin')} Location</dt><dd>Where the plant is native and where the book says it grew in the Philippines.</dd></div>
+      <div><dt>{icon('plant')} Description</dt><dd>A modern account from Wikipedia in English and, where one exists, in Tagalog.</dd></div>
+      <div><dt>{icon('pin')} Location</dt><dd>Where the plant is native, where the book says it grew, and which Philippine provinces have records of it today.</dd></div>
       <div><dt>{icon('flask')} Research</dt><dd>The most cited recent papers with the plant in the title, linked to the publisher.</dd></div>
     </dl>
   </div>
@@ -307,6 +313,49 @@ def paper_html(it):
     tag = '<span class="tag">Review</span>' if it.get('review') else ''
     return (f'<li><a href="{esc(url)}" target="_blank" rel="noopener">{rich(re.sub(r"</?(?!i>)[^>]*>", "", it["title"]))}'
             f'{icon("external")}</a><span class="paper-meta">{meta} {tag}</span></li>')
+
+
+def today_html(p):
+    """Modern description (Wikipedia in English and Tagalog, or POWO) and Philippine records from GBIF."""
+    by_sa = '<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>'
+    parts = []
+    if p['about_en']:
+        a = p['about_en']
+        parts.append(f'<p>{esc(a["text"])}</p><p class="credit">Excerpt from <a href="{esc(a["url"])}" target="_blank" '
+                     f'rel="noopener">“{esc(a["title"])}” on Wikipedia</a>, {by_sa}.</p>')
+    elif p['about_powo']:
+        a = p['about_powo']
+        parts.append(f'<p>{esc(a["text"])}</p><p class="credit">From <a href="https://powo.science.kew.org/taxon/{a["taxon"]}" '
+                     f'target="_blank" rel="noopener">Plants of the World Online</a>, Royal Botanic Gardens, Kew, '
+                     f'<a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.</p>')
+    if p['about_tl']:
+        a = p['about_tl']
+        parts.append(f'<h3>Sa Tagalog</h3><p lang="tl">{esc(a["text"])}</p><p class="credit" lang="tl">Sipi mula sa '
+                     f'<a href="{esc(a["url"])}" target="_blank" rel="noopener">“{esc(a["title"])}” sa Tagalog Wikipedia</a>, {by_sa}.</p>')
+    if not parts:
+        parts.append('<p>No openly licensed description of this plant was found.</p>')
+    ph = p['ph']
+    if ph:
+        link = f'https://www.gbif.org/occurrence/search?taxon_key={ph["key"]}&amp;country=PH'
+        parts.append('<h3>Recorded in the Philippines</h3>')
+        if ph['total']:
+            provs = ph['provinces']
+            top = ', '.join(f'{esc(n)} ({c})' for n, c in provs[:8])
+            rest = len(provs) - 8
+            where = ''
+            if provs:
+                where = (f' The ones with map coordinates fall in {len(provs)} province{"s" if len(provs) != 1 else ""}'
+                         f'{", most often " if rest > 0 else ": "}{top}{f", and {rest} more" if rest > 0 else ""}.')
+            parts.append(f'<p>GBIF holds {ph["total"]:,} record{"s" if ph["total"] != 1 else ""} of this plant from the Philippines.{where}</p>')
+            parts.append(f'<p class="credit">Counts from <a href="{link}" target="_blank" rel="noopener">GBIF occurrence records</a>, '
+                         f'{FETCHED}. They include planted trees and garden plants, and a province with no records may only lack collectors.</p>')
+        else:
+            parts.append(f'<p>GBIF holds no records of this plant from the Philippines.</p><p class="credit">Checked against '
+                         f'<a href="{link}" target="_blank" rel="noopener">GBIF occurrence records</a>, {FETCHED}.</p>')
+    return f'''<section class="today" aria-labelledby="td-h">
+  <h2 id="td-h">{icon('plant')} The plant today</h2>
+  <div class="prose">{''.join(parts)}</div>
+</section>'''
 
 
 def build_plant(p, prev, nxt):
@@ -423,7 +472,10 @@ def build_plant(p, prev, nxt):
   <div class="plant-facts">{facts}{note}</div>
 </div>
 <div class="wrap plant-body">
+  <div class="plant-main">
+  {today_html(p)}
   {text}
+  </div>
   {research}
 </div>
 {pager}'''
@@ -460,6 +512,9 @@ def build_families(plants):
 def build_about(plants):
     langs = ''.join(f'<div><dt>{a}</dt><dd>{b}</dd></div>' for a, b in LANGS)
     specimens = sum(1 for p in plants if p['photo'] and p['photo'].get('specimen'))
+    with_tl = sum(1 for p in plants if p['about_tl'])
+    with_powo = sum(1 for p in plants if p['about_powo'])
+    no_ph = sum(1 for p in plants if not (p['ph'] or {}).get('total'))
     renamed = sum(1 for p in plants if p['accepted'] and fold(p['printed']) != fold(p['sci']))
     body = f'''<header class="page-head wrap">
   <h1>About the book</h1>
@@ -477,6 +532,11 @@ def build_about(plants):
     <p>Botanical names have moved a long way since 1901. {renamed} of the {len(plants)} entries carry a different accepted name today, and each page shows both the name as printed and the modern one. Some of the book's identifications were wrong for the Philippine plant, usually because a name from Indian botany was applied to a local species. Those pages carry a note.</p>
     <p>Modern names, colours and native ranges were compiled by hand and checked against the GBIF backbone taxonomy. Photos are the lead image of each species' English Wikipedia article, or the image on its Wikidata record, with the photographer and licence read from Wikimedia Commons. Where Commons has nothing, the page uses an openly licensed photo from <a href="https://www.inaturalist.org/" target="_blank" rel="noopener">iNaturalist</a>. For the {specimens} species with neither, it shows a pressed specimen from the herbarium at the Royal Botanic Gardens, Kew, taken from <a href="https://powo.science.kew.org/" target="_blank" rel="noopener">Plants of the World Online</a>.</p>
     <p>Research links come from Europe PMC, fetched in {FETCHED}. For each plant the script asks for papers since 2022 with the species name in the title, pooling older synonyms still used in journals, and keeps the three with the most citations. If none exist it widens the search to 2018, then to abstracts. The list shows what researchers are studying. It does not vouch for any result.</p>
+  </section>
+  <section>
+    <h2>Modern descriptions and Philippine records</h2>
+    <p>Each page carries a short modern description. It is the first few sentences of the plant's English Wikipedia article and, for the {with_tl} plants that have one, of its Tagalog Wikipedia article, quoted under the Creative Commons Attribution-ShareAlike 4.0 licence and linked to the full article. {with_powo} species have no English article, so their pages quote the summary line from Kew's Plants of the World Online.</p>
+    <p>The list of provinces comes from <a href="https://www.gbif.org/" target="_blank" rel="noopener">GBIF</a>, which pools herbarium specimens and field observations. The script counts each plant's Philippine records by province. The counts follow where people have collected and photographed plants, so a common garden herb can show fewer records than a rare forest tree, and {no_ph} plants in the book have no Philippine records at all.</p>
   </section>
   <section>
     <h2>Reading the old spellings</h2>

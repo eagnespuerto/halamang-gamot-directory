@@ -12,7 +12,7 @@ UA = {'User-Agent': 'halamang-gamot-directory/1.0 (https://github.com/eagnespuer
 # Older names still common in the literature. Papers are pooled across them.
 ALIASES = {
     'Vincetoxicum indicum': ['Tylophora indica', 'Tylophora asthmatica'], 'Guilandina bonduc': ['Caesalpinia bonduc', 'Caesalpinia bonducella'],
-    'Biancaea sappan': ['Caesalpinia sappan'], 'Quassia indica': ['Samadera indica'],
+    'Biancaea sappan': ['Caesalpinia sappan'], 'Samadera indica': ['Quassia indica'],
     'Dysoxylum gaudichaudianum': ['Didymocheton gaudichaudianus'], 'Coleus amboinicus': ['Plectranthus amboinicus'],
     'Salvia rosmarinus': ['Rosmarinus officinalis'], 'Combretum indicum': ['Quisqualis indica'],
     'Vachellia farnesiana': ['Acacia farnesiana'], 'Ehretia microphylla': ['Carmona retusa'],
