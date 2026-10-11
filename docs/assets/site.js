@@ -1,4 +1,4 @@
-// Search, colour filter and sorting for the plant grid on the home page.
+// Search, ailment, source and colour filters and sorting for the plant grid on the home page.
 (function () {
   var grid = document.getElementById('grid');
   if (!grid) return;
@@ -7,6 +7,8 @@
   var count = document.getElementById('count');
   var empty = document.getElementById('empty');
   var sort = document.getElementById('sort');
+  var ailment = document.getElementById('ailment');
+  var source = document.getElementById('source');
   var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
   var color = '';
 
@@ -21,6 +23,8 @@
       var q = card.dataset.q;
       var ok = words.every(function (w) { return q.indexOf(w) !== -1; });
       if (ok && color) ok = card.dataset.colors.split(' ').indexOf(color) !== -1;
+      if (ok && ailment.value) ok = card.dataset.ailments.split(' ').indexOf(ailment.value) !== -1;
+      if (ok && source.value) ok = card.dataset.src.split(' ').indexOf(source.value) !== -1;
       card.hidden = !ok;
       if (ok) shown++;
     });
@@ -29,6 +33,8 @@
   }
 
   input.addEventListener('input', apply);
+  ailment.addEventListener('change', apply);
+  source.addEventListener('change', apply);
 
   chips.forEach(function (chip) {
     chip.addEventListener('click', function () {
@@ -47,8 +53,13 @@
     cards.forEach(function (card) { grid.appendChild(card); });
   });
 
-  // A ?q= in the address pre-fills the search.
-  var initial = new URLSearchParams(location.search).get('q');
-  if (initial) { input.value = initial; }
+  // A ?q= in the address pre-fills the search; ?ailment= and ?source= set the filters.
+  var params = new URLSearchParams(location.search);
+  if (params.get('q')) { input.value = params.get('q'); }
+  [ailment, source].forEach(function (select) {
+    var want = (params.get(select.id) || '').replace(/[^a-z0-9]/g, '');
+    if (want && select.querySelector('option[value="' + want + '"]')) { select.value = want; }
+  });
+  if (ailment.value || source.value) { document.getElementById('dir-h').scrollIntoView(); }
   apply();
 })();

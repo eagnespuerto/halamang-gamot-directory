@@ -34,6 +34,14 @@ def curation():
         n, acc, en, fil, colors, native, wiki, note = [x.strip() for x in (line.split('|') + [''] * 8)[:8]]
         if acc:
             rows.append({'accepted': acc, 'wiki': wiki or acc})
+    have = {r['accepted'] for r in rows}
+    # plants from the 1985 book that have no entry in curation.tsv
+    for line in (ROOT / 'data' / 'ladion.tsv').read_text(encoding='utf-8').splitlines():
+        if not line.strip() or line.startswith('#'):
+            continue
+        f = [x.strip() for x in (line.split('|') + [''] * 13)[:13]]
+        if f[4] not in have:
+            rows.append({'accepted': f[4], 'wiki': f[11] or f[4]})
     return rows
 
 

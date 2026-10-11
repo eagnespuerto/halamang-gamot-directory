@@ -118,6 +118,14 @@ p { margin: 0 0 1em; }
 .chip:active { translate: 0 1px; }
 .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .sort { font-size: .9rem; color: var(--muted); display: inline-flex; align-items: center; gap: .5rem; }
+.selects { display: flex; flex-wrap: wrap; gap: .6rem 1.25rem; }
+.sort select { max-width: 100%; }
+@media (max-width: 560px) { .selects, .sort { width: 100%; } .sort { justify-content: space-between; } .sort select { flex: 1; min-width: 0; max-width: 16rem; } }
+.ailments { display: flex; flex-wrap: wrap; gap: .35rem; }
+.ailment { font-size: .85rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: .12rem .65rem; text-decoration: none; }
+.ailment:hover { border-color: var(--accent); }
+.remedies { list-style: none; margin: 0 0 1.25rem; padding: 0; max-width: 68ch; display: grid; gap: .7rem; }
+.remedies li { display: grid; gap: .1rem; padding-left: .9rem; border-left: 2px solid var(--line); }
 .sort select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: .35rem .6rem; }
 .swatch { display: inline-block; width: .85rem; height: .85rem; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px var(--swatch-ring); flex: none; }
 .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 1.1rem; }
