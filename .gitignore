@@ -1,0 +1,6 @@
+# Agent skills installed locally (see skills-lock.json)
+.agents/
+.claude/
+# Downloaded on demand by scripts/parse_book.py
+data/source/
+__pycache__/
