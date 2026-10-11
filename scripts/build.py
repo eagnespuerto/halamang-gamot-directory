@@ -1,5 +1,5 @@
-"""Build the static site into docs/ from data/book.json, data/curation.tsv and
-data/enrichment.json. No dependencies beyond the standard library.
+"""Build the static site into docs/ from data/book.json, data/curation.tsv,
+data/ladion.tsv and data/enrichment.json. No dependencies beyond the standard library.
 
     python scripts/build.py
 """
@@ -57,6 +57,70 @@ LANGS = [('Tag.', 'Tagalog'), ('Vis.', 'Visayan'), ('Pam.', 'Pampango'), ('Iloc.
          ('Eng.', 'English'), ('Indo-Eng.', 'English as used in India')]
 
 
+LADION = 'Healing Wonders of Herbs'
+
+# Ailment groups for the home page filter: key, label, words to look for in the 1901 book's "Uses" text,
+# and the chapter titles of the 1985 book that fall under the group.
+AILMENTS = [
+    ('fever', 'Fever', r'\bfevers?\b|febrifuge|antipyretic|antiperiodic|malaria', ['fever']),
+    ('cough', 'Cough and asthma', r'cough|asthma|bronchi|expectorant|catarrh|phthisis|pectoral', ['cough', 'asthma']),
+    ('mouth', 'Mouth, teeth and throat',
+     r'sore throat|gargle|toothache|\bgums\b|aphth|mouth-?wash|tonsil|odontalg|stomatitis|\bteeth\b|thrush',
+     ['sore throat', 'swollen gums and mouth inflammation', 'toothache']),
+    ('diarrhea', 'Diarrhea and dysentery', r'diarrh|dysenter', ['diarrhea']),
+    ('stomach', 'Stomach and digestion', r'dyspeps|indigestion|flatulen|carminative|stomachic|\bcolic|gastr|digestion',
+     ['indigestion', 'flatulence or gas pain', 'hyperacidity']),
+    ('constipation', 'Constipation', r'constipat|purgative|laxative|cathartic|\bpurge', ['constipation']),
+    ('worms', 'Worms', r'anthelmintic|vermifuge|t[aæ]nia|tape-?worm|lumbric|\bworms\b|ascari', ['worm infestation']),
+    ('skin', 'Skin', r'skin diseases?|(?:diseases|affections|eruptions) of the skin|cutaneous|eczema|herpe|\bitch|scabies|ringworm'
+                     r'|lepro|psoriasis|dermat',
+     ['eczema', 'ringworm', 'scabies', 'skin eruptions and dermatitis', 'skin itchiness and allergy', 'herpes', "athlete's foot",
+      'sunburn and prickly heat', 'pimples or acne', 'measles and/or skin rashes', 'chicken pox', 'underarm body odor']),
+    ('wounds', 'Wounds, burns and boils', r'\bwounds?\b|\bburns\b|scalds?\b|\bboils?\b|abscess|\bulcers?\b|h[æe]mostatic|\bsores?\b',
+     ['bleeding wound', 'burns', 'abscesses and boils']),
+    ('pain', 'Joint pain, sprains and swelling', r'rheumati|sprain|contusion|bruise|neuralgi|lumbago|\bgout|swelling',
+     ['rheumatism or rheumatic joint pain', 'sprained ankle or wrist', 'mumps']),
+    ('head', 'Headache and fainting', r'headache|cephalalgia|migraine|fainting|syncope|vertigo',
+     ['headaches due to sinusitis', 'fainting spells']),
+    ('urinary', 'Urinary', r'diuretic|urinar|cystitis|bladder|calculi|calculus|dysuria|nephrit|dropsy', ['acute and chronic cystitis']),
+    ('hemorrhoids', 'Hemorrhoids', r'h[æe]morrhoid|\bpiles\b', ['hemorrhoids']),
+    ('bites', 'Bites and stings', r'snake|\bbites?\b|\bstings?\b|scorpion|venom|centipede',
+     ['snake bites', 'bee and wasp stings', 'mosquito bites']),
+    ('hair', 'Hair and scalp', r'dandruff|\blice\b|pedicul|\bhair\b|scalp|alopecia|baldness', ['dandruff', 'lice infestation on the head']),
+    ('women', 'Menstruation and childbirth',
+     r'menstru|emmenagogue|amenorrh|dysmenorrh|leucorrh|parturition|childbirth|uterine|galactagogue|lochia', []),
+    ('eyes', 'Eyes and ears', r'ophthalm|conjunctiv|\beyes?\b|otitis|otorrh|earache|\bears?\b|collyrium', []),
+]
+AILMENT_LABEL = {k: label for k, label, _, _ in AILMENTS}
+CHAPTER_GROUP = {ch: k for k, _, _, chapters in AILMENTS for ch in chapters}
+
+
+def tag_ailments(p):
+    """Ailment groups for one plant: keyword matches in the 1901 text, chapter titles from the 1985 book."""
+    text = plain(' '.join(p['uses'])).lower()
+    keys = {k for k, _, pattern, _ in AILMENTS if text and re.search(pattern, text)}
+    for ailment, how, _, _ in (p['ladion'] or {}).get('uses', []):
+        keys.add('fever' if how.endswith('for the fever') else CHAPTER_GROUP[ailment])
+    return [k for k, _, _, _ in AILMENTS if k in keys]
+
+
+def load_ladion():
+    rows = []
+    for line in (ROOT / 'data' / 'ladion.tsv').read_text(encoding='utf-8').splitlines():
+        if not line.strip() or line.startswith('#'):
+            continue
+        n, pg, title, printed, acc, en, fil, names, uses, colors, native, wiki, note = [
+            x.strip() for x in (line.split('|') + [''] * 13)[:13]]
+        rows.append(dict(
+            n=int(n), page=int(pg), title=title, printed=printed, accepted=acc, english=en, filipino=fil, colors=colors,
+            native=native, wiki=wiki, note=note,
+            names=[tuple(x.strip() for x in chunk.split(':', 1)) for chunk in names.split(';') if chunk.strip()],
+            uses=[(a.strip(), how.strip(), dose or '', int(pg2)) for a, how, dose, pg2 in
+                  (re.match(r'(.*?)=(.*?)(?:\s*\{(.*)\})?@(\d+)$', chunk.strip()).groups()
+                   for chunk in uses.split(';') if chunk.strip())]))
+    return rows
+
+
 def esc(s):
     return html.escape(s or '', quote=True)
 
@@ -93,6 +157,15 @@ def load():
             continue
         n, acc, en, fil, colors, native, wiki, note = [x.strip() for x in (line.split('|') + [''] * 8)[:8]]
         cur[int(n)] = dict(accepted=acc, english=en, filipino=fil, colors=colors, native=native, wiki=wiki, note=note)
+    # Plants of the 1985 book join the entry for the same species, or get an entry of their own after the 1901 ones.
+    ladion = {row['accepted']: row for row in load_ladion()}
+    have = {c['accepted'] for c in cur.values()}
+    for row in ladion.values():
+        if row['accepted'] not in have:
+            n = len(book) + 1
+            book.append({'n': n, 'book_name': row['accepted'], 'book_syn': '', 'group': None, 'family': '', 'family_en': None,
+                         'page': None, 'names': '', 'uses': [], 'dose': [], 'botany': [], 'habitat': [], 'tavera': False})
+            cur[n] = {k: row[k] for k in ('accepted', 'english', 'filipino', 'colors', 'native', 'wiki')} | {'note': ''}
     plants, genus, seen = [], '', {}
     for e in book:
         c = cur[e['n']]
@@ -110,6 +183,9 @@ def load():
         if printed_rest and not printed_rest.endswith(('.', ')')):
             printed_rest += '.'
         p = dict(e, **c)
+        p['tavera'] = e.get('tavera', True)
+        p['ladion'] = ladion.pop(c['accepted'], None) if c['accepted'] else None
+        p['ailments'] = tag_ailments(p)
         p['printed'] = name
         p['printed_rest'] = printed_rest
         p['sci'] = c['accepted'] or name
@@ -181,7 +257,7 @@ def page(title, desc, body, depth=0, active='', extra_head=''):
     nav = ''.join(
         f'<a href="{up}{href}"{" aria-current=\"page\"" if key == active else ""}>{label}</a>'
         for key, href, label in (('plants', 'index.html', 'Plants'), ('families', 'families.html', 'Families'),
-                                 ('about', 'about.html', 'About the book')))
+                                 ('about', 'about.html', 'About the books')))
     return f'''<!doctype html>
 <html lang="en">
 <head>
@@ -210,8 +286,8 @@ def page(title, desc, body, depth=0, active='', extra_head=''):
 <footer class="site-footer">
   <div class="wrap footer-row">
     <div class="footer-text">
-    <p>Halamang Gamot Directory is an open, static guide to a public-domain book. Every entry links to its sources; if you spot an error, <a href="{REPO}/issues" target="_blank" rel="noopener">open an issue on GitHub</a>.</p>
-    <p>Icons by <a href="https://phosphoricons.com" target="_blank" rel="noopener">Phosphor Icons</a> (MIT). Book text is in the public domain. Modern descriptions are excerpts from Wikipedia under CC BY-SA 4.0. Photos keep their own licences, credited on each entry. Site code MIT licensed.</p>
+    <p>Halamang Gamot Directory is an open, static guide to two Philippine books on medicinal plants. Every entry links to its sources; if you spot an error, <a href="{REPO}/issues" target="_blank" rel="noopener">open an issue on GitHub</a>.</p>
+    <p>Icons by <a href="https://phosphoricons.com" target="_blank" rel="noopener">Phosphor Icons</a> (MIT). The 1901 book's text is in the public domain. The 1985 book is in copyright, so its entries are summaries. Modern descriptions are excerpts from Wikipedia under CC BY-SA 4.0. Photos keep their own licences, credited on each entry. Site code MIT licensed.</p>
     <p>Built by Ella Puerto with the help of Claude Code. <a href="https://ko-fi.com/eagnespuerto" target="_blank" rel="noopener">{icon('coffee')} Support on Ko-fi</a></p>
     </div>
     <button type="button" class="theme-toggle" id="theme-toggle" hidden>
@@ -238,8 +314,12 @@ def card(p, up=''):
     else:
         img = f'<span class="no-photo">{icon("plant")}</span>'
     dots = ''.join(swatch(c) for part, cols in p['swatches'][:1] for c in cols)
-    q = fold(' '.join([p['title'], p['english'], p['sci'], p['printed'], p['names'], p['family'], p['modern_family']]))
+    lad = p['ladion'] or {}
+    q = fold(' '.join([p['title'], p['english'], p['sci'], p['printed'], p['names'], p['family'], p['modern_family'],
+                       lad.get('title', ''), lad.get('printed', ''), ' '.join(v for _, v in lad.get('names', []))]))
+    src = ' '.join(k for k, on in (('1901', p['tavera']), ('1985', p['ladion'])) if on)
     return (f'<li class="card" data-q="{esc(q)}" data-colors="{" ".join(p["groups"])}" data-n="{p["n"]}" '
+            f'data-ailments="{" ".join(p["ailments"])}" data-src="{src}" '
             f'data-name="{esc(fold(p["title"]))}" data-sci="{esc(fold(p["sci"]))}">'
             f'<a href="{up}plants/{p["slug"]}.html"><span class="thumb">{img}</span>'
             f'<span class="card-body"><span class="card-title">{esc(p["title"])}</span>'
@@ -265,11 +345,16 @@ def build_index(plants):
     inat = sum(1 for p in plants if p['photo'] and p['photo'].get('via') == 'iNaturalist')
     with_photo = sum(1 for p in plants if p['photo']) - specimens - inat
     with_papers = sum(1 for p in plants if p['papers']['items'])
+    n_tavera = sum(1 for p in plants if p['tavera'])
+    n_ladion = sum(1 for p in plants if p['ladion'])
+    n_both = sum(1 for p in plants if p['tavera'] and p['ladion'])
+    ailment_options = ''.join(
+        f'<option value="{k}">{label} ({sum(1 for p in plants if k in p["ailments"])})</option>' for k, label, _, _ in AILMENTS)
     body = f'''<section class="hero">
   <div class="wrap hero-grid">
     <div class="hero-copy">
-      <h1>Browse {len(plants)} healing plants from a 1901 Philippine book of herbs.</h1>
-      <p class="lede">T. H. Pardo de Tavera's <i>The Medicinal Plants of the Philippines</i>, laid out one plant per page with today's names, flower colours, native range, a photo and recent research.</p>
+      <h1>Browse {len(plants)} healing plants recorded in Philippine books of herbs.</h1>
+      <p class="lede">Drawn from T. H. Pardo de Tavera's <i>The Medicinal Plants of the Philippines</i> (1901) and Herminia de Guzman-Ladion's <i>{LADION}</i> (1985), laid out one plant per page with today's names, the ailments each was used for, flower colours, native range, a photo and recent research.</p>
       <form class="search" role="search" onsubmit="return false">
         <label class="sr-only" for="q">Search plants</label>
         {icon('search')}
@@ -286,33 +371,49 @@ def build_index(plants):
   </div>
   <div class="filters">
     <div class="chips" role="group" aria-label="Flower colour"><span class="filters-label">{icon('palette')} Flower colour</span>{chips}</div>
-    <label class="sort">Sort
-      <select id="sort">
-        <option value="n">Book order</option>
-        <option value="name">Common name A to Z</option>
-        <option value="sci">Scientific name A to Z</option>
-      </select>
-    </label>
+    <div class="selects">
+      <label class="sort">Ailment
+        <select id="ailment">
+          <option value="">Any ailment</option>
+          {ailment_options}
+        </select>
+      </label>
+      <label class="sort">Source
+        <select id="source">
+          <option value="">Both books ({len(plants)})</option>
+          <option value="1901">1901, Pardo de Tavera ({n_tavera})</option>
+          <option value="1985">1985, de Guzman-Ladion ({n_ladion})</option>
+        </select>
+      </label>
+      <label class="sort">Sort
+        <select id="sort">
+          <option value="n">Book order</option>
+          <option value="name">Common name A to Z</option>
+          <option value="sci">Scientific name A to Z</option>
+        </select>
+      </label>
+    </div>
   </div>
   <ul class="grid" id="grid">{cards}</ul>
-  <p class="empty" id="empty" hidden>No plant matches that search. Try a shorter word, or clear the colour filter.</p>
+  <p class="empty" id="empty" hidden>No plant matches that search. Try a shorter word, or clear the ailment, source and colour filters.</p>
 </section>
 <section class="wrap coverage">
   <h2>What each entry holds</h2>
   <div class="coverage-grid">
-    <p class="coverage-lead">The book's own words on uses, dose, botany and habitat sit beside facts gathered in {FETCHED}. {with_photo} of {len(plants)} entries have a photo from Wikimedia Commons, {inat} from iNaturalist, {specimens} show a herbarium sheet from Kew, and {with_papers} list papers from Europe PMC.</p>
+    <p class="coverage-lead">{n_tavera} plants come from the 1901 book, quoted in its own words on uses, dose, botany and habitat. {n_ladion} come from the 1985 book, {n_both} of them plants the older book also covers, with its remedies summarised by ailment. Both sit beside facts gathered in {FETCHED}. {with_photo} of {len(plants)} entries have a photo from Wikimedia Commons, {inat} from iNaturalist, {specimens} show a herbarium sheet from Kew, and {with_papers} list papers from Europe PMC.</p>
     <dl class="coverage-list">
-      <div><dt>{icon('translate')} Names</dt><dd>The Tagalog, Visayan, Ilocano, Spanish and English names Pardo de Tavera recorded, plus the name in use today.</dd></div>
+      <div><dt>{icon('translate')} Names</dt><dd>The Tagalog, Visayan, Ilocano, Spanish and English names each book recorded, plus the name in use today.</dd></div>
+      <div><dt>{icon('leaf')} Ailments</dt><dd>What each book used the plant for, grouped so the list above can be filtered by ailment.</dd></div>
       <div><dt>{icon('plant')} Description</dt><dd>A modern account from Wikipedia in English and, where one exists, in Tagalog.</dd></div>
-      <div><dt>{icon('pin')} Location</dt><dd>Where the plant is native, where the book says it grew, and which Philippine provinces have records of it today.</dd></div>
+      <div><dt>{icon('pin')} Location</dt><dd>Where the plant is native, where the 1901 book says it grew, and which Philippine provinces have records of it today.</dd></div>
       <div><dt>{icon('flask')} Research</dt><dd>The most cited recent papers with the plant in the title, linked to the publisher.</dd></div>
     </dl>
   </div>
-  <p class="caution">{icon('warning')}<span>The remedies and doses are a historical record from 1901. Several of these plants are poisonous. Do not treat this site as medical advice.</span></p>
+  <p class="caution">{icon('warning')}<span>The remedies and doses are a historical record from 1901 and 1985. Several of these plants are poisonous. Do not treat this site as medical advice.</span></p>
 </section>
 <script src="assets/site.js" defer></script>'''
-    desc = (f"A browsable directory of the {len(plants)} plants in Pardo de Tavera's The Medicinal Plants of the Philippines (1901), "
-            "with modern names, colours, native range, photos and recent research.")
+    desc = (f"A browsable directory of {len(plants)} medicinal plants from Pardo de Tavera's The Medicinal Plants of the Philippines (1901) "
+            f"and de Guzman-Ladion's {LADION} (1985), with modern names, ailments, colours, native range, photos and recent research.")
     (DOCS / 'index.html').write_text(page('Halamang Gamot Directory', desc, body, active='plants'), encoding='utf-8')
 
 
@@ -375,7 +476,7 @@ def build_plant(p, prev, nxt):
     # header
     printed = f'<i>{esc(p["printed"])}</i>{", " + rich(p["printed_rest"]) if p["printed_rest"] else ""}'
     family_bits = [esc(p['modern_family'])] if p['modern_family'] else []
-    if fold(p['family']).replace('ae', 'e') != fold(p['modern_family']).replace('ae', 'e'):
+    if p['tavera'] and fold(p['family']).replace('ae', 'e') != fold(p['modern_family']).replace('ae', 'e'):
         family_bits.append(f'filed in the book under {esc(p["family"])}')
     head = f'''<header class="plant-head wrap">
   <a class="back" href="{up}index.html">{icon('left')} All plants</a>
@@ -407,7 +508,10 @@ def build_plant(p, prev, nxt):
     # The book writes "(?)", "Not known." or "Doubtful." where it had no local name to give.
     names = re.sub(r'^\(\?\)[.;]?\s*', '', p['names']).strip()
     no_local = names != p['names'].strip() or plain(names).rstrip('.').lower() in ('', 'not known', 'unknown', 'doubtful')
-    if no_local:
+    lad = p['ladion']
+    if not p['tavera']:
+        pass
+    elif no_local:
         named = '' if plain(names).rstrip('.').lower() in ('', 'not known', 'unknown', 'doubtful') else rich(names) + ' '
         rows.append(('translate', 'Names in the book', named + 'The book records no Philippine name for this plant.'))
         other = p['other_names'] or {}
@@ -422,7 +526,13 @@ def build_plant(p, prev, nxt):
             rows.append(('translate', 'Names from other sources',
                          f'None found. {cite(other["checked"])} gives names from neighbouring countries but none from the Philippines.'))
     elif names:
-        rows.append(('translate', 'Names in the book', rich(names)))
+        rows.append(('translate', 'Names in the 1901 book' if lad else 'Names in the book', rich(names)))
+    if lad:
+        listed = '; '.join(f'{esc(lang)}: <i>{esc(vals)}</i>' for lang, vals in lad['names'])
+        rows.append(('translate', 'Names in the 1985 book' if p['tavera'] else 'Names in the book', listed))
+    if p['ailments']:
+        links = ''.join(f'<a class="ailment" href="{up}index.html?ailment={k}">{AILMENT_LABEL[k]}</a>' for k in p['ailments'])
+        rows.append(('leaf', 'Used for', f'<span class="ailments">{links}</span>'))
     if p['swatches']:
         parts = ''.join(
             f'<span class="color-part"><span class="part">{esc(part)}</span>{"".join(swatch(c) for c in cols)}'
@@ -442,10 +552,15 @@ def build_plant(p, prev, nxt):
         rows.append(('pin', 'In the Philippines, per the book', rich(short)))
     if family_bits:
         rows.append(('plant', 'Family', ', '.join(family_bits)))
-    src_links = [f'<a href="{GUTENBERG}#pb{p["page"]}" target="_blank" rel="noopener">Page {p["page"]} on Project Gutenberg</a>']
+    src_links = []
+    if p['tavera']:
+        src_links.append(f'<a href="{GUTENBERG}#pb{p["page"]}" target="_blank" rel="noopener">Page {p["page"]} on Project Gutenberg</a>')
+        rows.append(('book', 'Printed in 1901 as' if lad else 'Printed as', printed))
+    if lad:
+        src_links.append(f'<i>{LADION}</i> (1985), page {lad["page"]}')
+        rows.append(('book', 'Printed in 1985 as' if p['tavera'] else 'Printed as', f'<i>{esc(lad["printed"])}</i>'))
     if p['wiki_url']:
         src_links.append(f'<a href="{esc(p["wiki_url"])}" target="_blank" rel="noopener">Wikipedia</a>')
-    rows.append(('book', 'Printed as', printed))
     rows.append(('external', 'Sources', ' · '.join(src_links)))
     facts = '<dl class="facts">' + ''.join(
         f'<div><dt>{icon(ic)}{label}</dt><dd>{val}</dd></div>' for ic, label, val in rows) + '</dl>'
@@ -469,6 +584,19 @@ def build_plant(p, prev, nxt):
   <p class="caution">{icon('warning')}<span>A historical record, quoted as printed. Doses and remedies here are not medical advice.</span></p>
   {shared}
   <div class="prose">{book_text}</div>
+</section>''' if p['tavera'] else ''
+    if lad:
+        remedies = ''.join(
+            f'<li><b>{esc(a[0].upper() + a[1:])}</b><span>{esc(how[0].upper() + how[1:])}.</span>'
+            f'{f"<span class=dose>{esc(dose)}.</span>" if dose else ""}<span class="fine">Page {pg}</span></li>'
+            for a, how, dose, pg in lad['uses'])
+        lad_note = f'<p class="note">{icon("leaf")}<span>{esc(lad["note"])}</span></p>' if lad['note'] else ''
+        text += f'''<section class="book-text" aria-labelledby="lw-h">
+  <h2 id="lw-h">{icon('book')} What the 1985 book uses it for</h2>
+  <p class="caution">{icon('warning')}<span>A record of home remedies from 1985, with the book's amounts and doses reworded. It is not medical advice.</span></p>
+  <ul class="remedies">{remedies}</ul>
+  {lad_note}
+  <p class="fine">Summarised from Herminia de Guzman-Ladion, <i>{LADION}</i> (Manila: Philippine Publishing House, 1985), where this plant is shown as “{esc(lad['title'])}” on page {lad['page']}. The book is in copyright, so its wording and photographs are not reproduced. Amounts are the book's, restated.</p>
 </section>'''
     # research
     pa = p['papers']
@@ -508,7 +636,8 @@ def build_plant(p, prev, nxt):
   {research}
 </div>
 {pager}'''
-    desc = f'{p["title"]} ({p["sci"]}) in The Medicinal Plants of the Philippines, 1901: names, colours, native range, photo, the book\'s text and recent research.'
+    where = ' and '.join(x for x, on in (('The Medicinal Plants of the Philippines, 1901', p['tavera']), (f'{LADION}, 1985', lad)) if on)
+    desc = f'{p["title"]} ({p["sci"]}) in {where}: names, uses, colours, native range, photo and recent research.'
     (DOCS / 'plants' / f'{p["slug"]}.html').write_text(
         page(f'{p["title"]} · Halamang Gamot Directory', desc, body, depth=1, active='plants'), encoding='utf-8')
 
@@ -516,6 +645,8 @@ def build_plant(p, prev, nxt):
 def build_families(plants):
     groups = {}
     for p in plants:
+        if not p['tavera']:
+            continue
         groups.setdefault(p['group'], {}).setdefault(p['family'], []).append(p)
     out = []
     for g, fams in groups.items():
@@ -530,7 +661,7 @@ def build_families(plants):
     n_fam = sum(len(f) for f in groups.values())
     body = f'''<header class="page-head wrap">
   <h1>Families</h1>
-  <p class="lede">The book arranges its plants by botanical family. The {n_fam} family names below are the ones it prints, so Leguminosae and Compositae appear where a modern flora says Fabaceae and Asteraceae.</p>
+  <p class="lede">The 1901 book arranges its plants by botanical family, and this page follows it. The 1985 book runs in alphabetical order, so plants found only there are not listed here. The {n_fam} family names below are the ones it prints, so Leguminosae and Compositae appear where a modern flora says Fabaceae and Asteraceae.</p>
 </header>
 <div class="wrap families">{''.join(out)}</div>'''
     (DOCS / 'families.html').write_text(page(
@@ -544,21 +675,35 @@ def build_about(plants):
     with_tl = sum(1 for p in plants if p['about_tl'])
     with_powo = sum(1 for p in plants if p['about_powo'])
     no_ph = sum(1 for p in plants if not (p['ph'] or {}).get('total'))
-    renamed = sum(1 for p in plants if p['accepted'] and fold(p['printed']) != fold(p['sci']))
+    renamed = sum(1 for p in plants if p['tavera'] and p['accepted'] and fold(p['printed']) != fold(p['sci']))
+    n_tavera = sum(1 for p in plants if p['tavera'])
+    n_ladion = sum(1 for p in plants if p['ladion'])
+    n_both = sum(1 for p in plants if p['tavera'] and p['ladion'])
+    groups = ', '.join(label.lower() for _, label, _, _ in AILMENTS)
     body = f'''<header class="page-head wrap">
-  <h1>About the book</h1>
+  <h1>About the books</h1>
   <p class="lede">Trinidad H. Pardo de Tavera published <i>Plantas medicinales de Filipinas</i> in Madrid in 1892. Jerome B. Thomas Jr., a captain and assistant surgeon with the United States Volunteers, translated and revised it as <i>The Medicinal Plants of the Philippines</i>, printed in Philadelphia by P. Blakiston's Son &amp; Co. in 1901.</p>
 </header>
 <div class="wrap about prose">
   <section>
     <h2>What Pardo de Tavera set down</h2>
     <p>Pardo de Tavera was a Filipino physician trained in Paris. For each plant he gives the names used in Tagalog, Visayan, Ilocano, Pampango and Spanish, how healers and doctors used it, a dose where he had one, a botanical description, and where it grew. Thomas added English names, plant sizes and flower colours for army medical officers posted to small stations across the islands.</p>
-    <p>The book covers {len(plants)} plants. Read the full text on <a href="{GUTENBERG}" target="_blank" rel="noopener">Project Gutenberg</a> or page through the scan at the <a href="{ARCHIVE}" target="_blank" rel="noopener">Internet Archive</a>.</p>
+    <p>The book covers {n_tavera} plants. Read the full text on <a href="{GUTENBERG}" target="_blank" rel="noopener">Project Gutenberg</a> or page through the scan at the <a href="{ARCHIVE}" target="_blank" rel="noopener">Internet Archive</a>.</p>
+  </section>
+  <section>
+    <h2>The second book: <i>{LADION}</i></h2>
+    <p>Herminia de Guzman-Ladion, a nurse and physical therapist, wrote <i>{LADION}: Guide to the Effective Use of Medicinal Plants</i> for households. Philippine Publishing House in Manila printed it in 1985. It pairs water treatments with plant remedies for some forty everyday complaints, from abscesses to worms, then shows {n_ladion} plants one to a page with a photograph, the scientific name and the names used in Tagalog, Ilocano, Visayan, Bicol and Pampango.</p>
+    <p>{n_both} of those plants are also in the 1901 book, and their pages here carry both accounts. The other {n_ladion - n_both} have pages of their own. Three plants the remedies call for, tagulinaw, malabulak and lumbang bato, have no plant page in the book and are left out.</p>
+    <p>The book is still in copyright. Its entries here are a summary written for this site: which ailment each plant is used for, which part, in what form, and the amounts and doses the book gives, with the page number. All of it is reworded. The book's own text and its photographs are not reproduced. Where the scan is too faint to read an amount, the entry says less instead of guessing. Names are given as printed, misprints included, beside the accepted name.</p>
+  </section>
+  <section>
+    <h2>Filtering by ailment</h2>
+    <p>The home page can narrow the list to plants used for one group of ailments: {groups}. For the 1985 book the groups follow its chapters, so athlete's foot, eczema and ringworm all fall under skin. The 1901 book has no such chapters, so a script looks through each plant's “Uses” text for the words of that time, such as febrifuge, anthelmintic or emmenagogue. A match means the book mentions the ailment in that entry. It can catch a passing remark, and it can miss a use described in other words, so read the entry itself before relying on a tag.</p>
   </section>
   <section>
     <h2>How this directory was put together</h2>
     <p>The book's text comes from the Project Gutenberg transcription, split into one entry per plant by a script. Nothing in the quoted passages has been reworded. Where the book describes two or three species in a single account, each of their pages carries that account.</p>
-    <p>Botanical names have moved a long way since 1901. {renamed} of the {len(plants)} entries carry a different accepted name today, and each page shows both the name as printed and the modern one. Some of the book's identifications were wrong for the Philippine plant, usually because a name from Indian botany was applied to a local species. Those pages carry a note.</p>
+    <p>Botanical names have moved a long way since 1901. {renamed} of the {n_tavera} entries carry a different accepted name today, and each page shows both the name as printed and the modern one. Some of the book's identifications were wrong for the Philippine plant, usually because a name from Indian botany was applied to a local species. Those pages carry a note.</p>
     <p>Modern names, colours and native ranges were compiled by hand and checked against the GBIF backbone taxonomy. Photos are the lead image of each species' English Wikipedia article, or the image on its Wikidata record, with the photographer and licence read from Wikimedia Commons. Where Commons has nothing, the page uses an openly licensed photo from <a href="https://www.inaturalist.org/" target="_blank" rel="noopener">iNaturalist</a>. For the {specimens} species with neither, it shows a pressed specimen from the herbarium at the Royal Botanic Gardens, Kew, taken from <a href="https://powo.science.kew.org/" target="_blank" rel="noopener">Plants of the World Online</a>.</p>
     <p>Research links come from Europe PMC, fetched in {FETCHED}. For each plant the script asks for papers since 2022 with the species name in the title, pooling older synonyms still used in journals, and keeps the three with the most citations. If none exist it widens the search to 2018, then to abstracts. The list shows what researchers are studying. It does not vouch for any result.</p>
   </section>
@@ -579,7 +724,7 @@ def build_about(plants):
   </section>
   <section>
     <h2>A caution</h2>
-    <p>The remedies belong to the medicine of the 1890s. The book recommends plants now known to be dangerous, among them St. Ignatius bean, croton, yellow oleander and rosary pea, and its doses were written for physicians of that time. Treat the text as history.</p>
+    <p>The remedies belong to the medicine of the 1890s and the home practice of the 1980s. The 1901 book recommends plants now known to be dangerous, among them St. Ignatius bean, croton, yellow oleander and rosary pea, and its doses were written for physicians of that time. The 1985 book has dried talumpunay and kalatsutsi leaves smoked for asthma and puts oleander on the skin, all of which carry real risk. Treat both texts as history.</p>
   </section>
   <section>
     <h2>Corrections</h2>
@@ -587,8 +732,8 @@ def build_about(plants):
   </section>
 </div>'''
     (DOCS / 'about.html').write_text(page(
-        'About the book · Halamang Gamot Directory',
-        "About Pardo de Tavera's The Medicinal Plants of the Philippines and how this directory was built.",
+        'About the books · Halamang Gamot Directory',
+        f"About Pardo de Tavera's The Medicinal Plants of the Philippines, de Guzman-Ladion's {LADION}, and how this directory was built.",
         body, active='about'), encoding='utf-8')
 
 

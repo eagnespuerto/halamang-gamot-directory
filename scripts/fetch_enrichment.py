@@ -31,6 +31,10 @@ ALIASES = {
     'Ludwigia octovalvis': ['Jussiaea suffruticosa'], 'Centella asiatica': ['Hydrocotyle asiatica'], 'Trachyspermum ammi': ['Carum copticum'],
     'Limnophila rugosa': ['Limnophila roxburghii'], 'Tetracera scandens': ['Tetracera sarmentosa'],
     'Operculina turpethum': ['Ipomoea turpethum'], 'Citrus × aurantiifolia': ['Citrus aurantifolia'], 'Plumeria rubra': ['Plumeria acutifolia'],
+    'Mentha × villosa': ['Mentha cordifolia'], 'Leucaena leucocephala': ['Leucaena glauca'], 'Citrus × microcarpa': ['Citrofortunella microcarpa', 'calamansi'],
+    'Coleus scutellarioides': ['Plectranthus scutellarioides', 'Solenostemon scutellarioides', 'Coleus blumei'],
+    'Kalanchoe pinnata': ['Bryophyllum pinnatum'], 'Pandanus odorifer': ['Pandanus odoratissimus'], 'Ficus caulocarpa': ['Ficus stipulosa'],
+    'Brassica oleracea': ['cabbage'], 'Basella alba': ['Basella rubra'],
 }
 
 
@@ -57,6 +61,18 @@ def curation():
             continue
         n, acc, en, fil, colors, native, wiki, note = (line.split('|') + [''] * 8)[:8]
         rows.append({'n': int(n), 'accepted': acc.strip(), 'wiki': wiki.strip()})
+    return rows + ladion({r['accepted'] for r in rows})
+
+
+def ladion(have):
+    """Plants from the 1985 book that have no entry in curation.tsv."""
+    rows = []
+    for line in (ROOT / 'data' / 'ladion.tsv').read_text(encoding='utf-8').splitlines():
+        if not line.strip() or line.startswith('#'):
+            continue
+        f = [x.strip() for x in (line.split('|') + [''] * 13)[:13]]
+        if f[4] not in have:
+            rows.append({'n': 1000 + int(f[0]), 'accepted': f[4], 'wiki': f[11]})
     return rows
 
 
