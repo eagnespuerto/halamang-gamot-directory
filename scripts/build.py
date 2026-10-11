@@ -242,7 +242,7 @@ def build_index(plants):
       <form class="search" role="search" onsubmit="return false">
         <label class="sr-only" for="q">Search plants</label>
         {icon('search')}
-        <input id="q" type="search" placeholder="Try lagundi, Moringa or fever" autocomplete="off">
+        <input id="q" type="search" placeholder="Try lagundi, Moringa or Malvaceae" autocomplete="off">
       </form>
     </div>
     <div class="hero-photos">{hero_photos}</div>
