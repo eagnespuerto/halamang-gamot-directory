@@ -144,6 +144,7 @@ p { margin: 0 0 1em; }
 .plant-photo img { width: 100%; max-height: 34rem; object-fit: cover; border-radius: var(--radius); background: var(--sunk); }
 .plant-photo figcaption { display: flex; gap: .45rem; font-size: .82rem; color: var(--muted); margin-top: .55rem; overflow-wrap: anywhere; }
 .plant-photo figcaption .icon { margin-top: .15rem; }
+.plant-photo-specimen img { object-fit: contain; max-height: 38rem; }
 .plant-photo-none .no-photo { aspect-ratio: 4 / 3; height: auto; background: var(--sunk); border-radius: var(--radius); }
 .facts { margin: 0; display: grid; }
 .facts > div { padding: .85rem 0; border-top: 1px solid var(--line); }
