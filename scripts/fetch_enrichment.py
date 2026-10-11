@@ -42,6 +42,10 @@ ALIASES = {
 PHOTO_BLOCK = {'Canarium indicum - Icica icicariba - Köhler–s Medizinal-Pflanzen-171.jpg'}
 
 
+# Wiki titles whose lead image is an old engraving or otherwise a poor likeness: use this Commons file instead.
+PHOTO_OVERRIDE = {'Garlic': 'Garlic bulbs and cloves.jpg'}
+
+
 def get(url, params):
     q = urllib.parse.urlencode(params)
     for attempt in range(4):
@@ -180,6 +184,9 @@ def main():
     photos = data.setdefault('_photos', {})
     want = sorted({r['wiki'] or r['accepted'] for r in rows} - set(photos))
     pages = wiki_pages(want)
+    for t, f in PHOTO_OVERRIDE.items():
+        if t in pages:
+            pages[t]['file'] = f
     meta = commons(sorted({p['file'] for p in pages.values() if p.get('file')}))
     for t in want:
         p = pages.get(t)

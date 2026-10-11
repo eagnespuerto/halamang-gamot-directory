@@ -11318,22 +11318,6 @@
    }
   },
   "Garcinia venulosa": null,
-  "Garlic": {
-   "title": "Garlic",
-   "url": "https://en.wikipedia.org/wiki/Garlic",
-   "file": "Allium_sativum_Woodwill_1793.jpg",
-   "qid": "Q23400",
-   "image": {
-    "w": 960,
-    "h": 1588,
-    "page": "https://commons.wikimedia.org/wiki/File:Allium_sativum_Woodwill_1793.jpg",
-    "artist": "",
-    "license": "Public domain",
-    "license_url": "",
-    "thumb": "https://upload.wikimedia.org/wikipedia/commons/3/39/Allium_sativum_Woodwill_1793.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
-    "small": "https://upload.wikimedia.org/wikipedia/commons/3/39/Allium_sativum_Woodwill_1793.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
-   }
-  },
   "Garuga pinnata": {
    "title": "Garuga pinnata",
    "url": "https://en.wikipedia.org/wiki/Garuga_pinnata",
@@ -13708,6 +13692,22 @@
     "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
     "thumb": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Tagetes_x_erecta1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
     "small": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Tagetes_x_erecta1.jpg/330px-Tagetes_x_erecta1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+   }
+  },
+  "Garlic": {
+   "title": "Garlic",
+   "url": "https://en.wikipedia.org/wiki/Garlic",
+   "file": "Garlic bulbs and cloves.jpg",
+   "qid": "Q23400",
+   "image": {
+    "w": 960,
+    "h": 640,
+    "page": "https://commons.wikimedia.org/wiki/File:Garlic_bulbs_and_cloves.jpg",
+    "artist": "Ivar Leidus",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Garlic_bulbs_and_cloves.jpg/960px-Garlic_bulbs_and_cloves.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "small": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Garlic_bulbs_and_cloves.jpg/330px-Garlic_bulbs_and_cloves.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
    }
   }
  },
