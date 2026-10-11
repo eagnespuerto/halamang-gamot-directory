@@ -161,8 +161,10 @@ p { margin: 0 0 1em; }
 .note .icon { margin-top: .2rem; color: var(--accent); }
 .plant-body { display: grid; gap: 2.5rem clamp(2rem, 4vw, 4rem); padding-block: 3rem; align-items: start; }
 @media (min-width: 1000px) { .plant-body { grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); } .research { position: sticky; top: 1.5rem; } }
-.book-text h2, .research h2 { font-size: 1.55rem; display: flex; align-items: center; gap: .55rem; margin-bottom: 1rem; }
-.book-text h2 .icon, .research h2 .icon { color: var(--accent); }
+.today h2, .book-text h2, .research h2 { font-size: 1.55rem; display: flex; align-items: center; gap: .55rem; margin-bottom: 1rem; }
+.today h2 .icon, .book-text h2 .icon, .research h2 .icon { color: var(--accent); }
+.plant-main { display: grid; gap: 2.75rem; min-width: 0; }
+.credit { font-size: .85rem; color: var(--muted); margin-top: -.5em; }
 .book-text .caution { margin: 0 0 1.25rem; }
 .prose { max-width: 68ch; }
 .prose h3 { font: 600 .82rem/1.2 var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .6rem; }
