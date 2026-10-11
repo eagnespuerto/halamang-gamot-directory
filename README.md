@@ -10,7 +10,7 @@ Each plant has its own page with:
 - the scientific name as printed in 1901 and the accepted name now
 - flower, fruit and other colours
 - native range, and where the book says the plant grew in the Philippines
-- a photo from Wikimedia Commons with photographer and licence, or a Kew herbarium sheet where Commons has none
+- a photo from Wikimedia Commons with photographer and licence, or from iNaturalist or Kew's herbarium where Commons has none
 - the book's own text on uses, dose and botany
 - the most cited recent papers on the plant, from Europe PMC
 
@@ -36,7 +36,7 @@ GitHub Pages serves the `docs/` folder from `main`.
 
 - Book text: [Project Gutenberg ebook 26393](https://www.gutenberg.org/ebooks/26393), public domain. Scan at the [Internet Archive](https://archive.org/details/cu31924050881592).
 - Photos: Wikimedia Commons, loaded from Wikimedia's servers. Each keeps its own licence, shown under the photo.
-- Herbarium specimens, for the six species with no Commons photo: [Plants of the World Online](https://powo.science.kew.org/), digital images © Board of Trustees, RBG Kew, CC BY 3.0. Listed by hand in `data/powo_photos.json`.
+- Photos for species with nothing on Commons: [iNaturalist](https://www.inaturalist.org/) (CC0 or CC BY), and failing that herbarium specimens from [Plants of the World Online](https://powo.science.kew.org/), digital images © Board of Trustees, RBG Kew, CC BY 3.0. Listed by hand in `data/extra_photos.json`.
 - Name check: [GBIF backbone taxonomy](https://www.gbif.org/).
 - Papers: [Europe PMC](https://europepmc.org/).
 - Icons: [Phosphor Icons](https://phosphoricons.com), MIT.

@@ -81,7 +81,7 @@ def load():
     book = json.loads((ROOT / 'data' / 'book.json').read_text(encoding='utf-8'))
     enrich = json.loads((ROOT / 'data' / 'enrichment.json').read_text(encoding='utf-8'))
     photos = enrich['_photos']
-    powo = json.loads((ROOT / 'data' / 'powo_photos.json').read_text(encoding='utf-8'))
+    extra = json.loads((ROOT / 'data' / 'extra_photos.json').read_text(encoding='utf-8'))
     cur = {}
     for line in (ROOT / 'data' / 'curation.tsv').read_text(encoding='utf-8').splitlines():
         if not line.strip() or line.startswith('#'):
@@ -124,13 +124,16 @@ def load():
         if p['photo']:
             for k in ('thumb', 'small'):
                 p['photo'][k] = (p['photo'].get(k) or '').split('?')[0]
-        elif c['accepted'] in powo:
-            # Kew herbarium sheet, for species with nothing on Wikimedia Commons
-            k = powo[c['accepted']]
-            p['photo'] = {'thumb': k['thumb'], 'small': k['small'], 'w': None, 'h': None, 'specimen': True,
-                          'page': 'https://powo.science.kew.org/taxon/' + k['taxon'],
-                          'artist': 'Board of Trustees, RBG Kew', 'license': 'CC BY 3.0',
-                          'license_url': 'https://creativecommons.org/licenses/by/3.0/'}
+        elif c['accepted'] in extra:
+            # Nothing on Wikimedia Commons: an iNaturalist photo, or failing that a Kew herbarium sheet
+            k = extra[c['accepted']]
+            if k['source'] == 'powo':
+                p['photo'] = {'thumb': k['thumb'], 'small': k['small'], 'w': None, 'h': None, 'specimen': True,
+                              'page': 'https://powo.science.kew.org/taxon/' + k['taxon'],
+                              'artist': 'Board of Trustees, RBG Kew', 'license': 'CC BY 3.0',
+                              'license_url': 'https://creativecommons.org/licenses/by/3.0/'}
+            else:
+                p['photo'] = dict(k, w=None, h=None, via='iNaturalist')
         p['swatches'], p['color_source'] = parse_colors(c['colors'], e)
         groups = [COLORS[col][1] for part, cols in p['swatches'] if part == 'flower' for col in cols]
         if not groups:
@@ -242,7 +245,8 @@ def build_index(plants):
         f'<span class="swatch" style="--c:{GROUP_HEX[g]}"></span>{GROUP_LABEL.get(g, g)}</button>' for g in COLOR_GROUPS)
     cards = ''.join(card(p) for p in plants)
     specimens = sum(1 for p in plants if p['photo'] and p['photo'].get('specimen'))
-    with_photo = sum(1 for p in plants if p['photo']) - specimens
+    inat = sum(1 for p in plants if p['photo'] and p['photo'].get('via') == 'iNaturalist')
+    with_photo = sum(1 for p in plants if p['photo']) - specimens - inat
     with_papers = sum(1 for p in plants if p['papers']['items'])
     body = f'''<section class="hero">
   <div class="wrap hero-grid">
@@ -279,7 +283,7 @@ def build_index(plants):
 <section class="wrap coverage">
   <h2>What each entry holds</h2>
   <div class="coverage-grid">
-    <p class="coverage-lead">The book's own words on uses, dose, botany and habitat sit beside facts gathered in {FETCHED}. {with_photo} of {len(plants)} entries have a photo from Wikimedia Commons, {specimens} show a herbarium sheet from Kew, and {with_papers} list papers from Europe PMC.</p>
+    <p class="coverage-lead">The book's own words on uses, dose, botany and habitat sit beside facts gathered in {FETCHED}. {with_photo} of {len(plants)} entries have a photo from Wikimedia Commons, {inat} from iNaturalist, {specimens} show a herbarium sheet from Kew, and {with_papers} list papers from Europe PMC.</p>
     <dl class="coverage-list">
       <div><dt>{icon('translate')} Names</dt><dd>The Tagalog, Visayan, Ilocano, Spanish and English names Pardo de Tavera recorded, plus the name in use today.</dd></div>
       <div><dt>{icon('pin')} Location</dt><dd>Where the plant is native and where the book says it grew in the Philippines.</dd></div>
@@ -329,8 +333,8 @@ def build_plant(p, prev, nxt):
 </figure>'''
         else:
             figure = f'''<figure class="plant-photo">
-  <img src="{esc(ph['thumb'])}" alt="{esc(p['title'])}, {esc(p['sci'])}" width="{ph['w']}" height="{ph['h']}" fetchpriority="high">
-  <figcaption>{icon('camera')}<span>Photo: {esc(ph.get('artist') or 'see file page')}, {lic}, via <a href="{esc(ph['page'])}" target="_blank" rel="noopener">Wikimedia Commons</a></span></figcaption>
+  <img src="{esc(ph['thumb'])}" alt="{esc(p['title'])}, {esc(p['sci'])}"{f' width="{ph["w"]}" height="{ph["h"]}"' if ph['w'] else ''} fetchpriority="high">
+  <figcaption>{icon('camera')}<span>Photo: {esc(ph.get('artist') or 'see file page')}, {lic}, via <a href="{esc(ph['page'])}" target="_blank" rel="noopener">{ph.get('via') or 'Wikimedia Commons'}</a></span></figcaption>
 </figure>'''
     else:
         figure = f'''<figure class="plant-photo plant-photo-none">
@@ -471,7 +475,7 @@ def build_about(plants):
     <h2>How this directory was put together</h2>
     <p>The book's text comes from the Project Gutenberg transcription, split into one entry per plant by a script. Nothing in the quoted passages has been reworded. Where the book describes two or three species in a single account, each of their pages carries that account.</p>
     <p>Botanical names have moved a long way since 1901. {renamed} of the {len(plants)} entries carry a different accepted name today, and each page shows both the name as printed and the modern one. Some of the book's identifications were wrong for the Philippine plant, usually because a name from Indian botany was applied to a local species. Those pages carry a note.</p>
-    <p>Modern names, colours and native ranges were compiled by hand and checked against the GBIF backbone taxonomy. Photos are the lead image of each species' English Wikipedia article, or the image on its Wikidata record, with the photographer and licence read from Wikimedia Commons. {specimens} species have no photo there, so their pages show a pressed specimen from the herbarium at the Royal Botanic Gardens, Kew, taken from <a href="https://powo.science.kew.org/" target="_blank" rel="noopener">Plants of the World Online</a>.</p>
+    <p>Modern names, colours and native ranges were compiled by hand and checked against the GBIF backbone taxonomy. Photos are the lead image of each species' English Wikipedia article, or the image on its Wikidata record, with the photographer and licence read from Wikimedia Commons. Where Commons has nothing, the page uses an openly licensed photo from <a href="https://www.inaturalist.org/" target="_blank" rel="noopener">iNaturalist</a>. For the {specimens} species with neither, it shows a pressed specimen from the herbarium at the Royal Botanic Gardens, Kew, taken from <a href="https://powo.science.kew.org/" target="_blank" rel="noopener">Plants of the World Online</a>.</p>
     <p>Research links come from Europe PMC, fetched in {FETCHED}. For each plant the script asks for papers since 2022 with the species name in the title, pooling older synonyms still used in journals, and keeps the three with the most citations. If none exist it widens the search to 2018, then to abstracts. The list shows what researchers are studying. It does not vouch for any result.</p>
   </section>
   <section>
