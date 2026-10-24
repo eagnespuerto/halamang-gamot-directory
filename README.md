@@ -1,5 +1,11 @@
 # Halamang Gamot Directory
 
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![made with](https://img.shields.io/badge/made%20with-Python-3776AB?logo=python&logoColor=white)](https://github.com/eagnespuerto/halamang-gamot-directory)
+[![website](https://img.shields.io/badge/website-live-brightgreen)](https://eagnespuerto.github.io/halamang-gamot-directory/)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-support%20me-FF5E5B?logo=kofi&logoColor=white)](https://ko-fi.com/eagnespuerto)
+[![Linktree](https://img.shields.io/badge/Linktree-soitsagnes-43E55E?logo=linktree&logoColor=white)](https://linktr.ee/soitsagnes)
+
 A browsable directory of 248 medicinal plants recorded in two Philippine books:
 
 - T. H. Pardo de Tavera, *The Medicinal Plants of the Philippines* (translated and revised by Jerome B. Thomas Jr., Philadelphia, 1901), 217 plants.
